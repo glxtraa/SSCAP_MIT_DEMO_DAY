@@ -8,9 +8,10 @@ import { NextResponse } from "next/server";
 
 export async function POST(
   request: Request,
-  { params }: { params: { type: string } }
+  { params }: { params: Promise<{ type: string }> }
 ) {
   try {
+    const { type } = await params;
     const body = await request.json();
     const { deviceid, value, unit, timestamp } = body;
 
@@ -19,7 +20,7 @@ export async function POST(
     // 2. Anchored the hash to Base Mainnet
     // 3. Store in Vercel Blob/JSON
 
-    console.log(`[INGEST] Type: ${params.type} | Device: ${deviceid} | Value: ${value}${unit}`);
+    console.log(`[INGEST] Type: ${type} | Device: ${deviceid} | Value: ${value}${unit}`);
 
     return NextResponse.json({
       success: true,
