@@ -61,9 +61,9 @@ export default function MonitoringMap() {
   }
 
   return (
-    <div className="relative w-full h-[600px] border border-[#00B0FF]/20 group">
-      {/* Overlays */}
-      <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
+    <div className="relative w-full h-full border border-border-brand group bg-navy">
+      {/* Overlays - Desktop Only */}
+      <div className="absolute top-4 right-4 z-[1000] hidden md:flex flex-col gap-2">
         <div className="bg-[#050C1A]/90 backdrop-blur-md border border-[#00B0FF]/30 p-3 flex flex-col gap-2">
           <h4 className="text-[10px] font-bold text-[#00B0FF] uppercase tracking-tighter">Layer Controls</h4>
           <label className="flex items-center gap-2 cursor-pointer">
@@ -117,7 +117,7 @@ export default function MonitoringMap() {
                     <span className="text-[9px] uppercase text-white/40 font-bold">Storage</span>
                     <div className="flex items-center gap-1">
                       <Droplets className="w-3 h-3 text-[#00B0FF]" />
-                      <span className="text-xs font-mono">{school.totalStorageL.toLocaleString()}L</span>
+                      <span className="text-xs font-mono font-bold text-white">{school.totalStorageL.toLocaleString()}L</span>
                     </div>
                   </div>
                   <div className="flex flex-col">
@@ -129,40 +129,33 @@ export default function MonitoringMap() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-1 mb-4">
-                  <span className="text-[9px] uppercase text-white/40 font-bold">Risk Context</span>
-                  <div className="w-full h-1 bg-white/10 overflow-hidden">
-                    <div 
-                      className="h-full bg-red-500" 
-                      style={{ width: `${(school.riskScore || 0) * 20}%` }}
-                    />
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[9px] uppercase text-white/40 font-bold">Risk Context</span>
+                    <div className="w-full h-1 bg-white/10 overflow-hidden">
+                      <div 
+                        className="h-full bg-red-500" 
+                        style={{ width: `${(school.riskScore || 0) * 20}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] text-red-400 font-bold">Rating: {school.riskScore} / 5.0</span>
                   </div>
-                  <span className="text-[10px] text-red-400 font-bold">Rating: {school.riskScore} / 5.0</span>
                 </div>
-
-                <button 
-                  className="w-full py-2 bg-[#00B0FF] text-black text-[10px] font-bold uppercase tracking-widest hover:bg-[#2ed6ff] transition-colors"
-                  onClick={() => window.location.href = `/project/${school.id}`}
-                >
-                  Enter Project View
-                </button>
-              </div>
             </Popup>
           </Marker>
         ))}
       </MapContainer>
 
-      {/* Legend */}
-      <div className="absolute bottom-6 left-6 z-[1000] bg-[#050C1A]/90 backdrop-blur-md border border-[#00B0FF]/30 p-4">
-        <h4 className="text-[10px] font-bold text-[#00B0FF] uppercase tracking-[0.2em] mb-3">System Legend</h4>
-        <div className="flex flex-col gap-2">
+      {/* Legend - Mobile Friendly */}
+      <div className="absolute bottom-4 left-4 z-[1000] bg-dark/90 backdrop-blur-md border border-border-brand p-3 md:p-4">
+        <h4 className="text-[9px] md:text-[10px] font-bold text-accent uppercase tracking-[0.2em] mb-2 md:mb-3 whitespace-nowrap">System Legend</h4>
+        <div className="flex flex-col gap-1.5 md:gap-2">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-[#00B0FF]"></div>
-            <span className="text-[9px] text-white/70 uppercase">Active SSCAP Nodes</span>
+            <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-accent shadow-[0_0_8px_#00b0ff]"></div>
+            <span className="text-[8px] md:text-[9px] text-white/70 uppercase font-bold tracking-tighter">Active SSCAP Nodes</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 border border-[#00B0FF] bg-[#00B0FF]/20"></div>
-            <span className="text-[9px] text-white/70 uppercase">High Risk Basin</span>
+            <div className="w-1.5 h-1.5 md:w-2 md:h-2 border border-accent bg-accent/20"></div>
+            <span className="text-[8px] md:text-[9px] text-white/70 uppercase font-bold tracking-tighter">High Risk Basin (HydroBASINS L6)</span>
           </div>
         </div>
       </div>
