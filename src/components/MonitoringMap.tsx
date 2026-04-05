@@ -112,10 +112,11 @@ export default function MonitoringMap() {
           onEachFeature={(feature, layer) => {
             if (feature.properties && feature.properties.NAME) {
               layer.bindTooltip(`
-                <div class="px-2 py-1 bg-[#050C1A] border border-[#00B0FF]/30 text-[10px]">
-                  <div class="font-bold text-[#00B0FF] mb-0.5">${feature.properties.NAME}</div>
-                  <div class="text-white/60">Risk Score: <span class="text-white font-mono">${feature.properties.RISK}</span></div>
-                  <div class="text-white/60">Stress: <span class="text-red-400 font-bold">${feature.properties.STRESS_LEVEL}</span></div>
+                <div class="px-2 py-1 bg-[#050C1A] border border-[#00B0FF]/30 text-[10px] rounded shadow-xl">
+                  <div class="font-bold text-[#00B0FF] mb-0.5 tracking-tight uppercase">${feature.properties.NAME}</div>
+                  <div class="text-white/60">HydroBASINS ID: <span class="text-white font-mono">${feature.properties.HYBAS_ID}</span></div>
+                  <div class="text-white/60">Risk Score: <span class="text-red-400 font-bold">${feature.properties.AQUEDUCT_V4}.0</span></div>
+                  <div class="text-white/60">Level: <span class="text-red-400 font-bold">Extremely High</span></div>
                 </div>
               `, {
                 sticky: true,
