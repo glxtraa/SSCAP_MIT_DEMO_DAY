@@ -90,12 +90,40 @@ export default function MonitoringMap() {
 
         <GeoJSON
           data={basinData as any}
-          style={() => ({
-            color: "#00B0FF",
-            weight: 1,
-            fillColor: "#00B0FF",
-            fillOpacity: 0.1,
-          })}
+          style={(feature) => {
+            const risk = feature?.properties?.AQUEDUCT_V4 || 0;
+            const colors = {
+              4: "#ef4444", // Extremely High (Red)
+              3: "#f97316", // High (Orange)
+              2: "#eab308", // Medium-High (Yellow)
+              1: "#84cc16", // Low-Medium (Green)
+              0: "#00B0FF"  // Standard
+            };
+            const color = colors[risk as keyof typeof colors] || colors[0];
+            
+            return {
+              color: color,
+              weight: 1.5,
+              fillColor: color,
+              fillOpacity: 0.15,
+              dashArray: "3",
+            };
+          }}
+          onEachFeature={(feature, layer) => {
+            if (feature.properties && feature.properties.NAME) {
+              layer.bindTooltip(`
+                <div class="px-2 py-1 bg-[#050C1A] border border-[#00B0FF]/30 text-[10px]">
+                  <div class="font-bold text-[#00B0FF] mb-0.5">${feature.properties.NAME}</div>
+                  <div class="text-white/60">Risk Score: <span class="text-white font-mono">${feature.properties.RISK}</span></div>
+                  <div class="text-white/60">Stress: <span class="text-red-400 font-bold">${feature.properties.STRESS_LEVEL}</span></div>
+                </div>
+              `, {
+                sticky: true,
+                className: "custom-basin-tooltip",
+                opacity: 1
+              });
+            }
+          }}
         />
         
         {SCHOOLS.map((school) => (
