@@ -18,6 +18,7 @@ import {
 import { SCHOOLS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { getAIOpinion } from "@/lib/ai-modules";
+import { useLedger } from "@/lib/ledger-store";
 
 const pendingCertifications = [
   {
@@ -45,15 +46,35 @@ const pendingCertifications = [
 ];
 
 export default function ReviewerWorkspace() {
+  const { issueTokens } = useLedger();
+  const [issuedIds, setIssuedIds] = useState<string[]>([]);
+  const [isIssuing, setIsIssuing] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const activeCertifications = pendingCertifications.filter(c => !issuedIds.includes(c.id));
   const selectedCert = pendingCertifications.find(c => c.id === selectedId);
+
+  const handleIssue = async () => {
+    if (!selectedCert) return;
+    setIsIssuing(true);
+    
+    // Simulate Blockchain Minting Delay
+    await new Promise(resolve => setTimeout(resolve, 2500));
+    
+    const amount = parseFloat(selectedCert.vwbAmount.split(" ")[0]);
+    issueTokens(amount, selectedCert.schools[0]);
+    
+    setIssuedIds(prev => [...prev, selectedCert.id]);
+    setIsIssuing(false);
+    setSelectedId(null);
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 h-full">
       {/* Pending List Side Panel (Desktop only) */}
       <div className="hidden lg:block lg:col-span-1 space-y-4 h-full overflow-y-auto">
         <h4 className="text-[10px] font-bold text-accent uppercase tracking-widest mb-4">Certification Queue</h4>
-        {pendingCertifications.map((cert) => (
+        {activeCertifications.map((cert) => (
           <div
             key={cert.id}
             onClick={() => setSelectedId(cert.id)}
@@ -75,6 +96,11 @@ export default function ReviewerWorkspace() {
             <p className="text-[10px] text-muted uppercase mt-1">{cert.period}</p>
           </div>
         ))}
+        {activeCertifications.length === 0 && (
+          <div className="p-8 text-center border border-dashed border-border-brand opacity-40">
+            <span className="text-[10px] font-bold uppercase tracking-widest">Queue Empty</span>
+          </div>
+        )}
       </div>
 
       {/* Main Review Area */}
@@ -124,8 +150,15 @@ export default function ReviewerWorkspace() {
                     </div>
                   </div>
                 </div>
-                <button className="px-6 py-2 bg-accent text-navy text-[10px] font-bold uppercase tracking-widest hover:bg-white transition-colors shadow-[0_0_15px_rgba(0,176,255,0.2)]">
-                  Issue Aggregate WBT
+                <button 
+                  onClick={handleIssue}
+                  disabled={isIssuing}
+                  className={cn(
+                    "px-6 py-2 bg-accent text-navy text-[10px] font-bold uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(0,176,255,0.2)]",
+                    isIssuing ? "opacity-50 cursor-wait" : "hover:bg-white"
+                  )}
+                >
+                  {isIssuing ? "Anchoring to Base..." : "Issue Aggregate WBT"}
                 </button>
               </div>
 

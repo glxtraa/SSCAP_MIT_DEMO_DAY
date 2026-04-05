@@ -19,13 +19,16 @@ import { SCHOOLS } from "@/lib/constants";
 import { useLedger } from "@/lib/ledger-store";
 import { getRetirementNarrative } from "@/lib/ai-modules";
 import { cn } from "@/lib/utils";
+import RetirementReport from "./RetirementReport";
 
 export default function BuyerPortal() {
   const { balance, retireTokens, transactions } = useLedger();
   const [selectedSchool, setSelectedSchool] = useState<string>(SCHOOLS[0].id);
   const [amount, setAmount] = useState(10);
   const [isRetiring, setIsRetiring] = useState(false);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [showCertificate, setShowCertificate] = useState(false);
+  const [lastTxId, setLastTxId] = useState<string>("");
 
   const school = SCHOOLS.find(s => s.id === selectedSchool);
   const retirementHistory = transactions.filter(tx => tx.type === "Retirement");
@@ -34,11 +37,19 @@ export default function BuyerPortal() {
     if (amount > balance) return;
     setIsRetiring(true);
     
-    // Simulate Blockchain Retirement
+    // Phase 1: Blockchain Retirement
     await new Promise(resolve => setTimeout(resolve, 2000));
     
+    const txId = `TX-${Date.now()}`;
+    setLastTxId(txId);
     retireTokens(amount, selectedSchool);
     setIsRetiring(false);
+    
+    // Phase 2: AI Report Generation
+    setIsGeneratingReport(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setIsGeneratingReport(false);
+    
     setShowCertificate(true);
   };
 
@@ -119,13 +130,13 @@ export default function BuyerPortal() {
 
               <button 
                 onClick={handleRetire}
-                disabled={isRetiring || balance < amount}
+                disabled={isRetiring || isGeneratingReport || balance < amount}
                 className={cn(
                   "w-full py-5 bg-[#00B0FF] text-navy font-syne font-extrabold text-sm uppercase tracking-widest transition-all shadow-[0_0_25px_rgba(0,176,255,0.2)]",
-                  isRetiring ? "opacity-50 cursor-wait" : "hover:bg-white hover:shadow-[0_0_40px_rgba(255,255,255,0.3)]"
+                  (isRetiring || isGeneratingReport) ? "opacity-50 cursor-wait" : "hover:bg-white hover:shadow-[0_0_40px_rgba(255,255,255,0.3)]"
                 )}
               >
-                {isRetiring ? "Verifying Settlement..." : "Finalize Retirement"}
+                {isRetiring ? "Verifying Settlement..." : isGeneratingReport ? "Generating ESG Proof..." : "Finalize Retirement"}
               </button>
             </div>
           </div>
@@ -192,77 +203,34 @@ export default function BuyerPortal() {
           </div>
         </section>
 
-        <button className="w-full flex items-center justify-center gap-2 p-5 bg-accent text-navy hover:bg-white transition-all shadow-[0_0_20px_rgba(0,176,255,0.2)]">
-           <span className="text-[10px] font-black uppercase tracking-[0.2em]">Generate ESG Proof</span>
+        <button 
+          onClick={() => retirementHistory.length > 0 && setShowCertificate(true)}
+          className={cn(
+            "w-full flex items-center justify-center gap-2 p-5 bg-accent text-navy hover:bg-white transition-all shadow-[0_0_20px_rgba(0,176,255,0.2)]",
+            retirementHistory.length === 0 && "opacity-50 cursor-not-allowed"
+          )}
+        >
+           <span className="text-[10px] font-black uppercase tracking-[0.2em]">View Last ESG Proof</span>
            <ArrowRight className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Certificate Modal */}
+      {/* Report View */}
       <AnimatePresence>
-        {showCertificate && (
+        {showCertificate && selectedSchool && (
           <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[2000] bg-[#050C1A]/98 backdrop-blur-xl flex items-center justify-center p-4 md:p-8 overflow-y-auto"
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            className="fixed inset-0 z-[2000] bg-[#050C1A] overflow-y-auto"
           >
-            <div className="bg-white text-[#050C1A] w-full max-w-3xl p-6 md:p-16 relative shadow-[0_0_100px_rgba(0,176,255,0.3)]">
-              <button 
-                onClick={() => setShowCertificate(false)}
-                className="absolute top-4 right-4 md:top-8 md:right-8 text-[#050C1A]/30 hover:text-[#050C1A] font-bold text-sm tracking-widest"
-              >
-                CLOSE [X]
-              </button>
-
-              <div className="border-[6px] md:border-[12px] border-[#050C1A] p-6 md:p-12 flex flex-col items-center">
-                <Droplets className="w-12 h-12 md:w-20 md:h-20 text-[#050C1A] mb-8" />
-                
-                <h2 className="text-[10px] md:text-sm font-syne font-bold uppercase tracking-[0.5em] mb-4">Official Certificate of</h2>
-                <h1 className="text-3xl md:text-6xl font-syne font-black uppercase tracking-tighter mb-12 text-center leading-[0.9]">
-                  Volumetric <br /> Water Benefit
-                </h1>
-
-                <div className="w-24 h-1.5 bg-[#050C1A] mb-12 shadow-[0_0_10px_rgba(0,0,0,0.1)]" />
-
-                <div className="text-center space-y-6 max-w-lg mb-16">
-                  <p className="text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold opacity-40">This protocol certifies that</p>
-                  <p className="text-2xl md:text-4xl font-syne font-black italic uppercase underline decoration-[#00B0FF] decoration-8 underline-offset-8">MIT STARTUP EXCHANGE</p>
-                  <p className="text-xs md:text-sm leading-relaxed font-bold max-w-md mx-auto">
-                    has officially retired <span className="text-lg text-[#00B0FF]">{amount} m³ (WBT)</span> of verified basin replenishment at 
-                    <span className="block mt-2 underline decoration-[#00B0FF]/30">{school?.name || "Specified Project"}</span>
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full pt-12 border-t border-[#050C1A]/10 items-center">
-                  <div className="flex flex-col text-center md:text-left">
-                    <span className="text-[9px] uppercase font-bold opacity-30 tracking-[0.2em]">Transaction ID</span>
-                    <span className="text-[10px] font-mono font-bold truncate tracking-widest">0x{Math.random().toString(16).slice(2, 22).toUpperCase()}</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <div className="w-16 h-16 border-2 border-[#050C1A] p-1.5 mb-2 hover:scale-110 transition-transform">
-                       <div className="w-full h-full bg-[#050C1A]/5 grid grid-cols-4 grid-rows-4 gap-1">
-                          {Array.from({length: 16}).map((_, i) => <div key={i} className={cn("bg-[#050C1A]", Math.random() > 0.4 ? "opacity-100" : "opacity-0")} />)}
-                       </div>
-                    </div>
-                    <span className="text-[9px] uppercase font-bold tracking-[0.3em] opacity-40">Verified on Base</span>
-                  </div>
-                  <div className="flex flex-col items-center md:items-end text-center md:text-right">
-                    <span className="text-[9px] uppercase font-bold opacity-30 tracking-[0.3em]">Date of Settlement</span>
-                    <span className="text-[10px] font-black tracking-widest">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase()}</span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col md:flex-row gap-4 mt-16 w-full md:w-auto">
-                   <button className="flex items-center justify-center gap-3 px-8 py-4 bg-[#050C1A] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#00B0FF] transition-all">
-                      <Download className="w-4 h-4" /> Download Proof
-                   </button>
-                   <button className="flex items-center justify-center gap-3 px-8 py-4 border-2 border-[#050C1A] text-[#050C1A] text-xs font-bold uppercase tracking-widest hover:bg-[#050C1A] hover:text-white transition-all">
-                      <Share2 className="w-4 h-4" /> Share on X
-                   </button>
-                </div>
-              </div>
-            </div>
+            <RetirementReport 
+              amount={amount}
+              school={school!}
+              transactionId={lastTxId || "DEMO-TX-001"}
+              timestamp={new Date().toISOString()}
+              onClose={() => setShowCertificate(false)}
+            />
           </motion.div>
         )}
       </AnimatePresence>
