@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Data Sources
+/data/source/
+*.zip
+
+# One-shot scripts
+/scripts/
